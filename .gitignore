@@ -9,3 +9,7 @@ out/
 # Ignore logs and temporary files
 *.log
 *.tmp
+
+# Package / Library
+/lib/
+*.jar
