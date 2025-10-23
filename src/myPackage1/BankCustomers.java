@@ -1,7 +1,6 @@
 package myPackage1;
-
 import java.sql.*;
-import java.util.concurrent.Callable;
+import java.util.*;
 
 public class BankCustomers {
     public static Connection getConnection(){
@@ -21,12 +20,16 @@ public class BankCustomers {
         try {
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(query);
+            con.setAutoCommit(false);
             ps.setString(1,accNumber);
             ps.setString(2,cusName);
             ps.setDouble(3,Balance);
             ps.setString(4,cusAdd);
-            int rows = ps.executeUpdate();
-            System.out.println(rows+": record inserted Successfully.");
+            ps.addBatch();
+            int[] rows = ps.executeBatch();
+            con.commit();
+            System.out.println(rows.length+": records inserted Successfully.");
+
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -45,6 +48,32 @@ public class BankCustomers {
                 double balance   = rs.getDouble("Balance");
                 String cusAdd    = rs.getString("cusAdd");
                 System.out.println(accNumber+" | "+cusName+" | "+balance+" | "+cusAdd);
+            }
+            System.out.println("------------------------------------------");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void fetchSpecificCustomer(String accountNumber){
+        String query = "SELECT * FROM Customers WHERE accNumber = ?";
+        try{
+            Connection con = getConnection();
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setString(1,accountNumber);
+            ResultSet rs   = ps.executeQuery();
+            System.out.println("-------------Customers Records------------");
+            System.out.println("------------------------------------------");
+            boolean found = false;
+            while (rs.next()){
+                found = true;
+                String accNumber = rs.getString("accNumber");
+                String cusName   = rs.getString("cusName");
+                double balance   = rs.getDouble("Balance");
+                String cusAdd    = rs.getString("cusAdd");
+                System.out.println(accNumber+" | "+cusName+" | "+balance+" | "+cusAdd);
+            }if(!found){
+                System.out.println("No record found for account number : "+accountNumber);
             }
             System.out.println("------------------------------------------");
         }catch (Exception e){
@@ -76,8 +105,20 @@ public class BankCustomers {
             e.printStackTrace();
         }
     }
+    public static void createBankAccount(){
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter account number  : ");
+        String accN =sc.nextLine();
+        System.out.print("Enter customer name   : ");
+        String cusN =sc.nextLine();
+        System.out.print("Enter account balance : ");
+        double accB =sc.nextDouble();
+        sc.nextLine();
+        System.out.print("Enter customer address : ");
+        String cusAd =sc.nextLine();
+        insertCustomers(accN,cusN,accB,cusAd);
+    }
     public static void main(String[] args){
-       // insertCustomers("ACC23487432","Sachin Singh",40000.0,"Kanpur");
-        fetchCustomers();
+        fetchSpecificCustomer("ACC12345678");
     }
 }
